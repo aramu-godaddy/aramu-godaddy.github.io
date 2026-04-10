@@ -261,7 +261,7 @@
       <p>Practical techniques to reduce token usage without sacrificing quality.</p>
       <div class="hero-stats">
         <div class="stat"><div class="stat-value green">5</div><div class="stat-label">Settings</div></div>
-        <div class="stat"><div class="stat-value yellow">5</div><div class="stat-label">Workflow Rules</div></div>
+        <div class="stat"><div class="stat-value yellow">4</div><div class="stat-label">Workflow Rules</div></div>
         <div class="stat"><div class="stat-value purple">1</div><div class="stat-label">Memory Rules</div></div>
         <div class="stat"><div class="stat-value" style="color:var(--orange)">2</div><div class="stat-label">Hooks</div></div>
       </div>
@@ -348,7 +348,7 @@
       <div class="section-header">
         <span class="icon">&#128221;</span>
         <h2>CLAUDE.md Rules</h2>
-        <span class="count">5 items</span>
+        <span class="count">4 items</span>
       </div>
       <div class="card-grid two-col">
 
@@ -410,34 +410,6 @@
               </tbody>
             </table>
             <p class="compare-note">A wrong-path implementation burns 5,000+ output tokens on edits, test runs, and error loops &mdash; all thrown away.</p>
-          </div></div>
-          </div>
-        </div>
-
-        <!-- Subagents -->
-        <div class="card">
-          <div class="card-title"><span class="badge badge-workflow">Workflow</span><h3>Subagents for Exploration</h3></div>
-          <p>Everything Claude reads goes into the main context window and gets <strong>re-sent every turn</strong>. A subagent runs in its <strong>own isolated context</strong> &mdash; only a concise summary comes back.</p>
-          <pre><code>## Workflow
-- Use the investigator subagent
-  for multi-file exploration
-  before making changes.</code></pre>
-          <div class="detail-section">
-          <div class="detail-header" onclick="this.parentElement.classList.toggle('open')">
-            <h4>The Math</h4>
-            <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
-          </div>
-          <div class="detail-body"><div class="detail-content">
-            <table class="compare-table">
-              <thead><tr><th></th><th>Without Subagent</th><th>With Subagent</th></tr></thead>
-              <tbody>
-                <tr><td class="row-label">Where data lands</td><td class="val-bad">3,000 lines in main context</td><td class="val-good">3,000 lines in subagent (isolated)</td></tr>
-                <tr><td class="row-label">Main context cost</td><td class="val-bad">3,000 lines &times; 20 turns = 60k</td><td class="val-good">30 lines &times; 20 turns = 600</td></tr>
-                <tr><td class="row-label">Subagent cost</td><td class="val-dim">&mdash;</td><td>3,000 lines &times; 1 turn = 3k</td></tr>
-                <tr class="total-row"><td class="row-label">Total</td><td class="val-bad">~60,000 lines</td><td class="val-good">~3,600 lines (17x less)</td></tr>
-              </tbody>
-            </table>
-            <p class="compare-note">The longer the session runs after exploration, the bigger the savings compound.</p>
           </div></div>
           </div>
         </div>
