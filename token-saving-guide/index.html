@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code Token-Saving Guide</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23f5c518'/><text x='50' y='50' text-anchor='middle' dominant-baseline='central' font-size='60' font-weight='bold' fill='%23333'>$</text></svg>">
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --surface: #1a1a2e;
+    --surface-raised: #1f1f35;
+    --border: #2a2a4a;
+    --border-light: #252540;
+    --text: #eef0f6;
+    --text-muted: #9da5b4;
+    --text-dim: #6c7280;
+    --accent: #6cb4ff;
+    --green: #4ade80;
+    --yellow: #facc15;
+    --red: #fb7185;
+    --purple: #c084fc;
+    --orange: #fb923c;
+    --pink: #f472b6;
+    --cyan: #22d3ee;
+    --nav-width: 220px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 2rem; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    background-image: radial-gradient(ellipse at 20% 0%, rgba(99,102,241,0.08) 0%, transparent 50%),
+                      radial-gradient(ellipse at 80% 100%, rgba(244,114,182,0.06) 0%, transparent 50%);
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  .layout { display: flex; min-height: 100vh; }
+
+  /* ─── Sidebar ─── */
+  .sidebar {
+    position: fixed; top: 0; left: 0;
+    width: var(--nav-width); height: 100vh;
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 0; overflow-y: auto; z-index: 100;
+  }
+  .sidebar-logo { padding: 0 1.25rem 1.25rem; border-bottom: 1px solid var(--border); margin-bottom: 0.75rem; }
+  .sidebar-logo h1 {
+    font-size: 0.95rem; font-weight: 700;
+    background: linear-gradient(135deg, var(--cyan), var(--purple), var(--pink));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.3;
+  }
+  .sidebar-logo span { font-size: 0.7rem; color: var(--text-dim); display: block; margin-top: 0.25rem; }
+  .nav-group { margin-bottom: 0.25rem; }
+  .nav-group-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); padding: 0.75rem 1.25rem 0.35rem; }
+  .nav-link { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 1.25rem; color: var(--text-muted); text-decoration: none; font-size: 0.82rem; transition: all 0.15s; border-left: 2px solid transparent; }
+  .nav-link:hover { color: var(--text); background: rgba(108,180,255,0.06); }
+  .nav-link.active { color: var(--cyan); border-left-color: var(--cyan); background: rgba(34,211,238,0.08); }
+  .nav-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
+  .dot-all { background: var(--text-muted); color: var(--text-muted); } .dot-settings { background: var(--accent); color: var(--accent); }
+  .dot-workflow { background: var(--green); color: var(--green); } .dot-memory { background: var(--yellow); color: var(--yellow); }
+  .dot-hook { background: var(--orange); color: var(--orange); } .dot-table { background: var(--purple); color: var(--purple); }
+
+  /* ─── Main ─── */
+  .main { margin-left: var(--nav-width); flex: 1; padding: 2.5rem 3rem 4rem; max-width: 1100px; }
+
+  /* ─── Hero ─── */
+  .hero { margin-bottom: 2.5rem; padding: 2rem; border-radius: 16px; background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(192,132,252,0.08) 50%, rgba(244,114,182,0.1) 100%); border: 1px solid rgba(139,92,246,0.2); }
+  .hero h1 { font-size: 2rem; font-weight: 800; background: linear-gradient(135deg, var(--cyan), var(--accent), var(--purple), var(--pink)); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; animation: shimmer 4s ease infinite; }
+  @keyframes shimmer { 0%,100% { background-position: 0% center; } 50% { background-position: 100% center; } }
+  .hero p { color: var(--text-muted); font-size: 0.95rem; }
+  .hero-stats { display: flex; gap: 1rem; margin-top: 1.5rem; }
+  .stat { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 0.85rem 1rem; flex: 1; text-align: center; transition: transform 0.2s, box-shadow 0.2s; }
+  .stat:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+  .stat:nth-child(1) { border-color: rgba(74,222,128,0.3); } .stat:nth-child(2) { border-color: rgba(250,204,21,0.3); }
+  .stat:nth-child(3) { border-color: rgba(192,132,252,0.3); } .stat:nth-child(4) { border-color: rgba(251,146,60,0.3); }
+  .stat-value { font-size: 1.6rem; font-weight: 800; }
+  .stat-value.green { color: var(--green); } .stat-value.yellow { color: var(--yellow); }
+  .stat-value.purple { color: var(--purple); }
+  .stat-label { font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.15rem; }
+
+  /* ─── Sections ─── */
+  .section { margin-bottom: 2.5rem; }
+  .section-anchor { display: block; position: relative; top: -2rem; visibility: hidden; }
+  .section.hidden { display: none; }
+  .section.visible { animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .section-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.25rem; }
+  .section-header h2 { font-size: 1.2rem; font-weight: 700; color: var(--text); }
+  .section-header .count { font-size: 0.68rem; color: var(--text); background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(192,132,252,0.2)); border: 1px solid rgba(139,92,246,0.3); padding: 0.15rem 0.6rem; border-radius: 999px; font-weight: 600; }
+  .section-header .icon { font-size: 1.3rem; }
+
+  /* ─── Cards ─── */
+  .card-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+  .card-grid.two-col { grid-template-columns: 1fr 1fr; }
+  .card-grid.two-col .card:has(.detail-section) { grid-column: span 2; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    min-width: 0;
+  }
+  .card:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+  [data-category="settings"] .card { border-left-color: var(--accent); }
+  [data-category="workflow"] .card { border-left-color: var(--green); }
+  [data-category="memory"] .card { border-left-color: var(--yellow); }
+  [data-category="hooks"] .card { border-left-color: var(--orange); }
+
+  .card-title {
+    display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem;
+  }
+  .card-title h3 { font-size: 1rem; font-weight: 600; }
+
+  .badge {
+    font-size: 0.62rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 0.15rem 0.5rem; border-radius: 999px; white-space: nowrap; flex-shrink: 0;
+  }
+  .badge-settings { background: linear-gradient(135deg, rgba(108,180,255,0.2), rgba(34,211,238,0.15)); color: var(--cyan); }
+  .badge-workflow { background: linear-gradient(135deg, rgba(74,222,128,0.2), rgba(52,211,153,0.15)); color: var(--green); }
+  .badge-memory { background: linear-gradient(135deg, rgba(250,204,21,0.2), rgba(251,146,60,0.15)); color: var(--yellow); }
+  .badge-hook { background: linear-gradient(135deg, rgba(251,146,60,0.2), rgba(244,114,182,0.15)); color: var(--orange); }
+
+  .card p { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 0.5rem; }
+  .card ol { color: var(--text-muted); font-size: 0.88rem; margin: 0.4rem 0 0.5rem 1.25rem; }
+  .card li { margin-bottom: 0.25rem; }
+
+  /* ─── Collapsible detail section ─── */
+  .detail-section {
+    margin-top: 0.75rem;
+    border: 1px solid rgba(210, 153, 34, 0.25);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .detail-section.open {
+    border-color: rgba(210, 153, 34, 0.5);
+    box-shadow: 0 0 0 1px rgba(210, 153, 34, 0.2);
+  }
+  .detail-header {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: var(--surface-raised);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .detail-header:hover { background: rgba(250,204,21,0.06); }
+  .detail-header h4 {
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: linear-gradient(90deg, var(--yellow), var(--orange));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0; flex: 1;
+  }
+  .detail-header svg {
+    width: 14px; height: 14px; fill: none; stroke: var(--yellow);
+    stroke-width: 2; transition: transform 0.25s;
+  }
+  .detail-section.open .detail-header svg { transform: rotate(90deg); }
+  .detail-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+  }
+  .detail-section.open .detail-body { max-height: 600px; }
+  .detail-content {
+    padding: 1rem;
+    background: var(--surface-raised);
+  }
+
+  /* ─── Code blocks ─── */
+  .code-block { position: relative; margin-top: 0.6rem; }
+  pre { background: rgba(0,0,0,0.3); border: 1px solid var(--border-light); border-radius: 6px; padding: 0.75rem 1rem; overflow-x: auto; margin: 0; white-space: pre; }
+  code { font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace; font-size: 0.8rem; white-space: pre; }
+  p code, li code { background: rgba(110,118,129,0.15); padding: 0.12rem 0.35rem; border-radius: 4px; font-size: 0.8rem; }
+  pre code { background: none; padding: 0; }
+
+  .copy-btn {
+    position: absolute; top: 0.4rem; right: 0.4rem;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 5px;
+    color: var(--text-muted); cursor: pointer; padding: 0.25rem 0.5rem;
+    font-size: 0.68rem; font-family: inherit; display: flex; align-items: center; gap: 0.3rem;
+    opacity: 0; transition: opacity 0.15s, background 0.15s, color 0.15s;
+  }
+  .code-block:hover .copy-btn { opacity: 1; }
+  .copy-btn:hover { background: var(--border); color: var(--text); }
+  .copy-btn.copied { color: var(--green); border-color: var(--green); opacity: 1; }
+  .copy-btn svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ─── Compare tables ─── */
+  .compare-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 0.5rem; border: 1px solid var(--border-light); border-radius: 6px; overflow: hidden; }
+  .compare-table th { background: var(--surface-raised); font-size: 0.68rem; padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border); text-align: left; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+  .compare-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border-light); color: var(--text-muted); }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table .row-label { color: var(--text); font-weight: 500; white-space: nowrap; }
+  .compare-table .total-row td { font-weight: 700; color: var(--text); border-top: 2px solid var(--border); }
+  .compare-table .val-bad { color: var(--red); } .compare-table .val-good { color: var(--green); } .compare-table .val-dim { color: var(--text-dim); }
+  .compare-note { font-size: 0.78rem; color: var(--text-dim); margin-top: 0.5rem; font-style: italic; }
+
+  /* ─── Quick Ref Table ─── */
+  .table-wrapper { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  th { text-align: left; color: var(--text-dim); font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.75rem 1rem; background: var(--surface-raised); border-bottom: 1px solid var(--border); }
+  td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--border-light); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(88,166,255,0.03); }
+  .impact-high { color: var(--green); font-weight: 600; text-shadow: 0 0 8px rgba(74,222,128,0.3); }
+  .impact-medium { color: var(--yellow); font-weight: 600; text-shadow: 0 0 8px rgba(250,204,21,0.2); }
+  .tag { display: inline-block; font-size: 0.72rem; color: var(--purple); background: rgba(192,132,252,0.1); border: 1px solid rgba(192,132,252,0.15); padding: 0.12rem 0.45rem; border-radius: 4px; font-family: monospace; }
+
+  .placeholder { border: 2px dashed rgba(192,132,252,0.3); border-radius: 10px; padding: 2rem; text-align: center; color: var(--text-dim); font-size: 0.88rem; background: rgba(192,132,252,0.03); }
+  footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 0.78rem; text-align: center; }
+  footer code { color: var(--cyan); }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 1.5rem; }
+    .hero-stats { flex-direction: column; gap: 0.75rem; }
+    .card-grid.two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <h1>Token-Saving Guide</h1>
+      <span>Claude Code Best Practices</span>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Categories</div>
+      <a href="#all" class="nav-link active" data-filter="all"><span class="nav-dot dot-all"></span> All</a>
+      <a href="#settings" class="nav-link" data-filter="settings"><span class="nav-dot dot-settings"></span> Settings &amp; Env Vars</a>
+      <a href="#workflow" class="nav-link" data-filter="workflow"><span class="nav-dot dot-workflow"></span> CLAUDE.md Rules</a>
+      <a href="#memory" class="nav-link" data-filter="memory"><span class="nav-dot dot-memory"></span> Memory Rules</a>
+      <a href="#hooks" class="nav-link" data-filter="hooks"><span class="nav-dot dot-hook"></span> Hooks</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Reference</div>
+      <a href="#quickref" class="nav-link" data-filter="quickref"><span class="nav-dot dot-table"></span> Quick Reference</a>
+      <a href="#upcoming" class="nav-link" data-filter="upcoming"><span class="nav-dot dot-table"></span> Coming Soon</a>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <div class="hero">
+      <h1>Claude Code Token-Saving Guide</h1>
+      <p>Practical techniques to reduce token usage without sacrificing quality.</p>
+      <div class="hero-stats">
+        <div class="stat"><div class="stat-value green">5</div><div class="stat-label">Settings</div></div>
+        <div class="stat"><div class="stat-value yellow">5</div><div class="stat-label">Workflow Rules</div></div>
+        <div class="stat"><div class="stat-value purple">1</div><div class="stat-label">Memory Rules</div></div>
+        <div class="stat"><div class="stat-value" style="color:var(--orange)">2</div><div class="stat-label">Hooks</div></div>
+      </div>
+    </div>
+
+    <!-- ════════ SETTINGS ════════ -->
+    <div class="section" id="settings-section" data-category="settings">
+      <span class="section-anchor" id="settings"></span>
+      <div class="section-header">
+        <span class="icon">&#9881;</span>
+        <h2>Settings &amp; Environment Variables</h2>
+        <span class="count">5 items</span>
+      </div>
+
+      <!-- Simple settings: 2-col grid -->
+      <div class="card-grid two-col">
+
+        <div class="card">
+          <div class="card-title"><span class="badge badge-settings">Settings</span><h3>Default to Haiku</h3></div>
+          <p>Every session starts on the cheapest model (~18x cheaper than Opus). Escalate only when the task demands it.</p>
+          <pre><code>// ~/.claude/settings.json
+{ "model": "haiku" }</code></pre>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="badge badge-settings">Settings</span><h3>Medium Effort Level</h3></div>
+          <p>Reduces output verbosity and reasoning depth, directly cutting output tokens per response.</p>
+          <pre><code>"env": {
+  "CLAUDE_CODE_EFFORT_LEVEL": "medium"
+}</code></pre>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="badge badge-settings">Settings</span><h3>Disable Non-Essential Model Calls</h3></div>
+          <p>Prevents background and speculative model invocations that burn tokens without direct user benefit.</p>
+          <pre><code>"env": {
+  "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1"
+}</code></pre>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="badge badge-settings">Settings</span><h3>Disable Experimental Betas</h3></div>
+          <p>Avoids beta features that may trigger additional model calls behind the scenes.</p>
+          <pre><code>"env": {
+  "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": "1"
+}</code></pre>
+        </div>
+
+      </div>
+
+      <!-- Autocompact gets its own full-width card with detail table -->
+      <div class="card-grid" style="margin-top: 1rem;">
+        <div class="card">
+          <div class="card-title"><span class="badge badge-settings">Settings</span><h3>Autocompact at 75%</h3></div>
+          <p>Trigger context compression earlier. Late compression is aggressive and lossy &mdash; Claude re-reads files it already saw, paying for the same content twice.</p>
+          <pre><code>"env": {
+  "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "75"
+}</code></pre>
+          <div class="detail-section">
+          <div class="detail-header" onclick="this.parentElement.classList.toggle('open')">
+            <h4>Why This Matters</h4>
+            <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+          <div class="detail-body"><div class="detail-content">
+            <table class="compare-table">
+              <thead><tr><th></th><th>Default (near 100%)</th><th>At 75%</th></tr></thead>
+              <tbody>
+                <tr><td class="row-label">When it triggers</td><td class="val-bad">Context nearly full</td><td class="val-good">25% headroom remaining</td></tr>
+                <tr><td class="row-label">Compression quality</td><td class="val-bad">Aggressive, lossy</td><td class="val-good">Gentle, preserves key details</td></tr>
+                <tr><td class="row-label">File re-reads needed</td><td class="val-bad">Yes &mdash; lost details</td><td class="val-good">No &mdash; details retained</td></tr>
+                <tr class="total-row"><td class="row-label">Net effect</td><td class="val-bad">Pays for same content twice</td><td class="val-good">Reads once, keeps working</td></tr>
+              </tbody>
+            </table>
+            <p class="compare-note">Earlier compression is incremental and preserves more detail, avoiding duplicate file reads that double your input token cost.</p>
+          </div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ WORKFLOW ════════ -->
+    <div class="section" id="workflow-section" data-category="workflow">
+      <span class="section-anchor" id="workflow"></span>
+      <div class="section-header">
+        <span class="icon">&#128221;</span>
+        <h2>CLAUDE.md Rules</h2>
+        <span class="count">5 items</span>
+      </div>
+      <div class="card-grid two-col">
+
+        <!-- Minimize Tool Output -->
+        <div class="card">
+          <div class="card-title"><span class="badge badge-workflow">Workflow</span><h3>Minimize Tool Output</h3></div>
+          <p>Every line of tool output enters the context window and gets <strong>re-sent as input tokens on every subsequent turn</strong>. The same information can cost wildly different amounts depending on how you ask for it.</p>
+          <pre><code>## Conventions
+- Minimize tool output:
+  - git log -5 --oneline
+  - git diff --stat before full diffs
+  - Read with offset/limit
+  - Grep with head_limit and glob filters
+  - Run specific test files, not full suites</code></pre>
+          <div class="detail-section">
+          <div class="detail-header" onclick="this.parentElement.classList.toggle('open')">
+            <h4>Per-Tool Comparison</h4>
+            <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+          <div class="detail-body"><div class="detail-content">
+            <table class="compare-table">
+              <thead><tr><th>Tool Call</th><th>Unconstrained</th><th>With Rules</th><th>Reduction</th></tr></thead>
+              <tbody>
+                <tr><td class="row-label">git log</td><td class="val-bad">~50 lines</td><td class="val-good">~5 lines</td><td class="val-good">10x</td></tr>
+                <tr><td class="row-label">git diff</td><td class="val-bad">~200 lines</td><td class="val-good">~15 lines (--stat first)</td><td class="val-good">13x</td></tr>
+                <tr><td class="row-label">Read file</td><td class="val-bad">~500 lines (full file)</td><td class="val-good">~30 lines (offset/limit)</td><td class="val-good">17x</td></tr>
+                <tr><td class="row-label">Grep search</td><td class="val-bad">~100 lines</td><td class="val-good">~10 lines (head_limit + glob)</td><td class="val-good">10x</td></tr>
+                <tr><td class="row-label">Test run</td><td class="val-bad">Full suite (~300 lines)</td><td class="val-good">Specific files (~20 lines)</td><td class="val-good">15x</td></tr>
+                <tr class="total-row"><td class="row-label">Per cycle</td><td class="val-bad">~850 lines</td><td class="val-good">~60 lines</td><td class="val-good">~14x less</td></tr>
+              </tbody>
+            </table>
+            <p class="compare-note">Over a 20-turn session with 3 investigation cycles, this saves ~47,000 lines of re-sent context.</p>
+          </div></div>
+          </div>
+        </div>
+
+        <!-- Plan Before Implementing -->
+        <div class="card">
+          <div class="card-title"><span class="badge badge-workflow">Workflow</span><h3>Plan Before Implementing</h3></div>
+          <p>Require Claude to present a plan and get approval before implementing. Without this, Claude may edit files, hit errors, and backtrack &mdash; every wrong-path action costs tokens that produce <strong>zero value</strong>.</p>
+          <pre><code>## Workflow
+- Present a plan and get approval
+  before implementing.
+  No autonomous multi-file changes
+  or test edits.</code></pre>
+          <div class="detail-section">
+          <div class="detail-header" onclick="this.parentElement.classList.toggle('open')">
+            <h4>Cost Comparison</h4>
+            <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+          <div class="detail-body"><div class="detail-content">
+            <table class="compare-table">
+              <thead><tr><th></th><th>No Plan</th><th>Plan First</th></tr></thead>
+              <tbody>
+                <tr><td class="row-label">First action</td><td class="val-bad">Starts editing immediately</td><td class="val-good">Presents plan (~200 tokens)</td></tr>
+                <tr><td class="row-label">Wrong approach</td><td class="val-bad">Undo + redo all edits (2x)</td><td class="val-good">Redirect before code written</td></tr>
+                <tr><td class="row-label">Typical waste</td><td class="val-bad">5,000+ tokens thrown away</td><td class="val-good">~0 (caught at plan stage)</td></tr>
+                <tr class="total-row"><td class="row-label">Net effect</td><td class="val-bad">Pays full cost for wrong path</td><td class="val-good">~200 tokens to validate</td></tr>
+              </tbody>
+            </table>
+            <p class="compare-note">A wrong-path implementation burns 5,000+ output tokens on edits, test runs, and error loops &mdash; all thrown away.</p>
+          </div></div>
+          </div>
+        </div>
+
+        <!-- Subagents -->
+        <div class="card">
+          <div class="card-title"><span class="badge badge-workflow">Workflow</span><h3>Subagents for Exploration</h3></div>
+          <p>Everything Claude reads goes into the main context window and gets <strong>re-sent every turn</strong>. A subagent runs in its <strong>own isolated context</strong> &mdash; only a concise summary comes back.</p>
+          <pre><code>## Workflow
+- Use the investigator subagent
+  for multi-file exploration
+  before making changes.</code></pre>
+          <div class="detail-section">
+          <div class="detail-header" onclick="this.parentElement.classList.toggle('open')">
+            <h4>The Math</h4>
+            <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+          <div class="detail-body"><div class="detail-content">
+            <table class="compare-table">
+              <thead><tr><th></th><th>Without Subagent</th><th>With Subagent</th></tr></thead>
+              <tbody>
+                <tr><td class="row-label">Where data lands</td><td class="val-bad">3,000 lines in main context</td><td class="val-good">3,000 lines in subagent (isolated)</td></tr>
+                <tr><td class="row-label">Main context cost</td><td class="val-bad">3,000 lines &times; 20 turns = 60k</td><td class="val-good">30 lines &times; 20 turns = 600</td></tr>
+                <tr><td class="row-label">Subagent cost</td><td class="val-dim">&mdash;</td><td>3,000 lines &times; 1 turn = 3k</td></tr>
+                <tr class="total-row"><td class="row-label">Total</td><td class="val-bad">~60,000 lines</td><td class="val-good">~3,600 lines (17x less)</td></tr>
+              </tbody>
+            </table>
+            <p class="compare-note">The longer the session runs after exploration, the bigger the savings compound.</p>
+          </div></div>
+          </div>
+        </div>
+
+        <!-- Search Before Creating -->
+        <div class="card">
+          <div class="card-title"><span class="badge badge-workflow">Workflow</span><h3>Search Before Creating</h3></div>
+          <p>Before adding constants or data structures, search for existing definitions. Avoids duplication that a later review cycle would catch &mdash; saving a full fix round-trip.</p>
+          <pre><code>## Workflow
+- Before adding constants or data
+  structures, search the package for
+  existing definitions to avoid
+  duplication.</code></pre>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="badge badge-workflow">Workflow</span><h3>Run /simplify After Multi-File Work</h3></div>
+          <p>Catches duplication and waste in one pass rather than multiple correction rounds. Run it before committing while context is fresh.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ════════ MEMORY ════════ -->
+    <div class="section" id="memory-section" data-category="memory">
+      <span class="section-anchor" id="memory"></span>
+      <div class="section-header">
+        <span class="icon">&#129504;</span>
+        <h2>Memory Rules</h2>
+        <span class="count">1 item</span>
+      </div>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title"><span class="badge badge-memory">Memory</span><h3>Lean Commit / Push / PR Workflow</h3></div>
+          <p>When Claude already made the changes in the session, pre-commit reads are pure waste. This memory rule eliminates redundant calls:</p>
+          <ol>
+            <li><strong>Skip reads entirely</strong> &mdash; even <code>git diff --stat</code> + <code>git status</code> + <code>git log -5 --oneline</code> is 3 unnecessary calls when Claude already knows what changed.</li>
+            <li><strong>Chain into 1 call</strong> instead of 3 separate ones (add, commit, push).</li>
+          </ol>
+          <p>Goes from <strong>~4&ndash;6 tool calls down to 1</strong>. The CLAUDE.md rules handle output size &mdash; this memory handles redundant calls.</p>
+          <pre><code># ~/.claude/memory/feedback_commit_push_workflow.md
+# When user asks to commit/push/PR after a session where
+# you made the changes:
+
+- Skip git status, git diff, git log &mdash; you already know
+- Single Bash call:
+  git add &lt;files&gt; &amp;&amp; git commit -q -m "..." &amp;&amp; git push -q
+- PR:
+  gh pr view --json url 2&gt;/dev/null || gh pr create ...</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ HOOKS ════════ -->
+    <div class="section" id="hooks-section" data-category="hooks">
+      <span class="section-anchor" id="hooks"></span>
+      <div class="section-header">
+        <span class="icon">&#128268;</span>
+        <h2>Hooks</h2>
+        <span class="count">2 items</span>
+      </div>
+      <div class="card-grid">
+
+        <div class="card">
+          <div class="card-title"><span class="badge badge-hook">Hook</span><h3>Pre-Commit Lint</h3></div>
+          <p>A <code>PreToolUse</code> hook runs ESLint on staged files before <code>git commit</code>. Without it, each failed commit triggers a costly retry loop.</p>
+          <pre><code>// settings.json
+"hooks": {
+  "PreToolUse": [{
+    "matcher": "Bash",
+    "hooks": [{
+      "type": "command",
+      "command": "bash ~/.claude/hooks/lint-staged.sh",
+      "timeout": 30
+    }]
+  }]
+}</code></pre>
+          <div class="detail-section">
+          <div class="detail-header" onclick="this.parentElement.classList.toggle('open')">
+            <h4>Retry Cost Breakdown</h4>
+            <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+          <div class="detail-body"><div class="detail-content">
+            <table class="compare-table">
+              <thead><tr><th></th><th>No Lint Hook</th><th>With PreToolUse Hook</th></tr></thead>
+              <tbody>
+                <tr><td class="row-label">When errors found</td><td class="val-bad">After commit fails</td><td class="val-good">Before commit runs</td></tr>
+                <tr><td class="row-label">Per error cost</td><td class="val-bad">3 calls (read error + edit + retry)</td><td class="val-good">1 call (fix + commit)</td></tr>
+                <tr><td class="row-label">Multiple errors</td><td class="val-bad">Cascades: 6&ndash;9 wasted calls</td><td class="val-good">All caught in single pass</td></tr>
+                <tr class="total-row"><td class="row-label">Net effect</td><td class="val-bad">Retry loop per lint error</td><td class="val-good">Fix once, commit once</td></tr>
+              </tbody>
+            </table>
+            <p class="compare-note">The hook intercepts <code>git commit</code> calls and runs ESLint on staged files. All issues surface in one pass before any commit attempt.</p>
+          </div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="badge badge-hook">Hook</span><h3>Cost-Aware Status Line</h3></div>
+          <p>Live dollar-cost display in your prompt. See spend in real time and intervene early if a session gets expensive. Color-coded: <span style="color:var(--green)">green</span> &lt; $1, <span style="color:var(--yellow)">yellow</span> $1&ndash;$5, <span style="color:var(--red)">red</span> &gt; $5.</p>
+          <pre><code>// settings.json
+"statusLine": {
+  "type": "command",
+  "command": "bash ~/.claude/statusline-command.sh"
+}</code></pre>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ════════ QUICK REFERENCE ════════ -->
+    <div class="section" id="quickref-section" data-category="quickref">
+      <span class="section-anchor" id="quickref"></span>
+      <div class="section-header">
+        <span class="icon">&#9889;</span>
+        <h2>Quick Reference</h2>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Action</th><th>Where</th><th>Impact</th></tr></thead>
+          <tbody>
+            <tr><td>Set <code>"model": "haiku"</code></td><td><span class="tag">settings.json</span></td><td class="impact-high">High &mdash; 18x cheaper baseline</td></tr>
+            <tr><td>Lean commit/push/PR memory</td><td><span class="tag">.claude/memory/</span></td><td class="impact-high">High &mdash; 4-6 calls down to 1</td></tr>
+            <tr><td>Set autocompact to 75%</td><td><span class="tag">settings.json env</span></td><td class="impact-medium">Medium &mdash; prevents context bloat</td></tr>
+            <tr><td>Set effort level to medium</td><td><span class="tag">settings.json env</span></td><td class="impact-medium">Medium &mdash; less verbose output</td></tr>
+            <tr><td>Add "minimize tool output" rules</td><td><span class="tag">CLAUDE.md</span></td><td class="impact-medium">Medium &mdash; fewer tokens in context</td></tr>
+            <tr><td>Add cost status line</td><td><span class="tag">settings.json</span></td><td class="impact-medium">Medium &mdash; visibility drives behavior</td></tr>
+            <tr><td>Disable non-essential model calls</td><td><span class="tag">settings.json env</span></td><td class="impact-medium">Medium &mdash; eliminates background calls</td></tr>
+            <tr><td>Pre-commit lint hook</td><td><span class="tag">settings.json hooks</span></td><td class="impact-medium">Medium &mdash; prevents retry loops</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ════════ COMING SOON ════════ -->
+    <div class="section" id="upcoming-section" data-category="upcoming">
+      <span class="section-anchor" id="upcoming"></span>
+      <div class="section-header">
+        <span class="icon">&#128640;</span>
+        <h2>Coming Soon</h2>
+      </div>
+      <div class="placeholder">
+        Space reserved for additional techniques, benchmarks, and team findings.
+      </div>
+    </div>
+
+    <footer>
+      Last updated: April 2026 &middot; Open with <code>open ~/.claude/token-saving-guide.html</code>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+// ─── Category filtering ───
+const navLinks = document.querySelectorAll('.nav-link[data-filter]');
+const sections = document.querySelectorAll('.section[data-category]');
+const hero = document.querySelector('.hero');
+
+function filterTo(category) {
+  navLinks.forEach(l => l.classList.remove('active'));
+  const activeLink = document.querySelector(`.nav-link[data-filter="${category}"]`);
+  if (activeLink) activeLink.classList.add('active');
+  if (category === 'all') {
+    hero.style.display = '';
+    sections.forEach(s => { s.classList.remove('hidden'); s.classList.add('visible'); });
+  } else {
+    hero.style.display = 'none';
+    sections.forEach(s => {
+      if (s.dataset.category === category) { s.classList.remove('hidden'); s.classList.add('visible'); }
+      else { s.classList.remove('visible'); s.classList.add('hidden'); }
+    });
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+navLinks.forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    filterTo(link.dataset.filter);
+    history.replaceState(null, '', `#${link.dataset.filter}`);
+  });
+});
+
+const hash = location.hash.replace('#', '');
+if (hash && hash !== 'all') filterTo(hash);
+
+// ─── Copy buttons ───
+document.querySelectorAll('pre').forEach(pre => {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'code-block';
+  pre.parentNode.insertBefore(wrapper, pre);
+  wrapper.appendChild(pre);
+  const btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.innerHTML = `<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Copy</span>`;
+  wrapper.appendChild(btn);
+  btn.addEventListener('click', () => {
+    const text = pre.querySelector('code').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.classList.add('copied');
+      btn.querySelector('span').textContent = 'Copied!';
+      btn.querySelector('svg').innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.querySelector('span').textContent = 'Copy';
+        btn.querySelector('svg').innerHTML = '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>';
+      }, 2000);
+    });
+  });
+});
+</script>
+
+</body>
+</html>
