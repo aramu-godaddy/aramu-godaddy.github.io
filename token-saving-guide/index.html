@@ -280,10 +280,13 @@
       <div class="card-grid two-col">
 
         <div class="card">
-          <div class="card-title"><span class="badge badge-settings">Settings</span><h3>Default to Haiku</h3></div>
-          <p>Every session starts on the cheapest model (~18x cheaper than Opus). Escalate only when the task demands it.</p>
-          <pre><code>// ~/.claude/settings.json
-{ "model": "haiku" }</code></pre>
+          <div class="card-title"><span class="badge badge-settings">Settings</span><h3>Match Model to Task</h3></div>
+          <p>For complex repos with multi-file changes, start on Sonnet &mdash; Haiku struggles and the retry cost exceeds the savings. Use Haiku for simple tasks or sub-agent delegation via <code>/route haiku</code>.</p>
+          <pre><code>// ~/.claude/settings.json — complex repo default
+{ "model": "sonnet" }
+
+// Use haiku for isolated lookups or sub-agents
+// Agent({ model: "haiku", ... })</code></pre>
         </div>
 
         <div class="card">
@@ -316,7 +319,7 @@
       <div class="card-grid" style="margin-top: 1rem;">
         <div class="card">
           <div class="card-title"><span class="badge badge-settings">Settings</span><h3>Autocompact at 75%</h3></div>
-          <p>Trigger context compression earlier. Late compression is aggressive and lossy &mdash; Claude re-reads files it already saw, paying for the same content twice.</p>
+          <p>Trigger context compression earlier. Late compression is aggressive and lossy &mdash; Claude re-reads files it already saw, increasing your input token cost.</p>
           <pre><code>"env": {
   "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "75"
 }</code></pre>
@@ -335,7 +338,7 @@
                 <tr class="total-row"><td class="row-label">Net effect</td><td class="val-bad">Pays for same content twice</td><td class="val-good">Reads once, keeps working</td></tr>
               </tbody>
             </table>
-            <p class="compare-note">Earlier compression is incremental and preserves more detail, avoiding duplicate file reads that double your input token cost.</p>
+            <p class="compare-note">Earlier compression is incremental and preserves more detail, avoiding duplicate file reads that increase your input token cost.</p>
           </div></div>
           </div>
         </div>
@@ -428,6 +431,7 @@
         <div class="card">
           <div class="card-title"><span class="badge badge-workflow">Workflow</span><h3>Run /simplify After Multi-File Work</h3></div>
           <p>Catches duplication and waste in one pass rather than multiple correction rounds. Run it before committing while context is fresh.</p>
+          <p><strong>Threshold:</strong> Use after 3+ file changes. Skip for single-file fixes &mdash; the overhead isn't worth it.</p>
         </div>
 
       </div>
@@ -531,7 +535,7 @@
         <table>
           <thead><tr><th>Action</th><th>Where</th><th>Impact</th></tr></thead>
           <tbody>
-            <tr><td>Set <code>"model": "haiku"</code></td><td><span class="tag">settings.json</span></td><td class="impact-high">High &mdash; 18x cheaper baseline</td></tr>
+            <tr><td>Match model to task (Sonnet default, Haiku for sub-agents)</td><td><span class="tag">settings.json</span></td><td class="impact-high">High &mdash; avoids retry cost from under-powered model</td></tr>
             <tr><td>Lean commit/push/PR memory</td><td><span class="tag">.claude/memory/</span></td><td class="impact-high">High &mdash; 4-6 calls down to 1</td></tr>
             <tr><td>Set autocompact to 75%</td><td><span class="tag">settings.json env</span></td><td class="impact-medium">Medium &mdash; prevents context bloat</td></tr>
             <tr><td>Set effort level to medium</td><td><span class="tag">settings.json env</span></td><td class="impact-medium">Medium &mdash; less verbose output</td></tr>
